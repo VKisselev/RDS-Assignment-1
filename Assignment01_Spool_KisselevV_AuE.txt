@@ -1,0 +1,385 @@
+SQL> --Setting/Checking date
+SQL> ALTER SESSION SET NLS_DATE_FORMAT ='YYYY-MM-DD';
+
+Session altered.
+
+SQL> SELECT SYSDATE
+  2  FROM DUAL;
+
+SYSDATE                                                                                             
+----------                                                                                          
+2018-01-18                                                                                          
+
+SQL> --Clearing current database
+SQL> DROP TABLE OldBooking;
+
+Table dropped.
+
+SQL> DROP TABLE Room;
+
+Table dropped.
+
+SQL> DROP TABLE Booking;
+
+Table dropped.
+
+SQL> DROP TABLE Hotel;
+
+Table dropped.
+
+SQL> DROP TABLE Guest;
+
+Table dropped.
+
+SQL> --Creating tables Hotel, Room, Guest, Booking, and OldBooking
+SQL> CREATE TABLE Hotel
+  2  (HotelNo    CHAR(8)         NOT NULL
+  3  ,HotelName  VARCHAR2(50)    NOT NULL
+  4  ,City       VARCHAR2(50)    NOT NULL
+  5  ,CONSTRAINT PKHotel PRIMARY KEY (HotelNo)
+  6  );
+
+Table created.
+
+SQL> --
+SQL> CREATE TABLE Room
+  2  (RoomNo     CHAR(5)         NOT NULL
+  3              CHECK(RoomNo    BETWEEN 1 AND 100)
+  4  ,HotelNo    CHAR(8)         NOT NULL
+  5  ,RoomType   VARCHAR2(6)     NOT NULL
+  6  ,RoomPrice  DECIMAL(5,2)    NOT NULL
+  7  ,CONSTRAINT PKRoom          PRIMARY KEY (RoomNo, HotelNo)
+  8  ,CONSTRAINT FKHotelNo       FOREIGN KEY (HotelNo)
+  9                              REFERENCES Hotel (HotelNo)
+ 10  ,CONSTRAINT chk_type        CHECK(RoomType IN('Single', 'Double', 'Family'))
+ 11  ,CONSTRAINT chk_roomNo      CHECK(RoomNo BETWEEN 1 AND 100)
+ 12  ,CONSTRAINT chk_roomPrice   CHECK(RoomPrice BETWEEN 100.00 AND 1000.00)
+ 13  );
+
+Table created.
+
+SQL> --
+SQL> CREATE TABLE Guest
+  2  (GuestNo        CHAR(5)         NOT NULL
+  3  ,GuestName      VARCHAR2(50)    NOT NULL
+  4  ,GuestAddress   VARCHAR2(50)    NOT NULL
+  5  ,CONSTRAINT PKGuest PRIMARY KEY (GuestNo)
+  6  );
+
+Table created.
+
+SQL> --
+SQL> CREATE TABLE Booking
+  2  (HotelNo    CHAR(8)         NOT NULL
+  3  ,GuestNo    CHAR(5)         NOT NULL
+  4  ,DateFrom   DATE
+  5  ,DateTo     DATE
+  6  ,RoomNo     CHAR(5)         NOT NULL
+  7  ,CONSTRAINT PKBooking   PRIMARY KEY (HotelNo, GuestNo, DateFrom)
+  8  ,CONSTRAINT FKHotelNoBook   FOREIGN KEY (HotelNo) REFERENCES Hotel (HotelNo)
+  9  ,CONSTRAINT FKGuestNo   FOREIGN KEY (GuestNo) REFERENCES Guest (GuestNo)
+ 10  );
+
+Table created.
+
+SQL> --Checking for proper table parameters in SQL
+SQL> DESCRIBE Hotel;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ HOTELNO                                               NOT NULL CHAR(8)
+ HOTELNAME                                             NOT NULL VARCHAR2(50)
+ CITY                                                  NOT NULL VARCHAR2(50)
+
+SQL> DESCRIBE Room;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ ROOMNO                                                NOT NULL CHAR(5)
+ HOTELNO                                               NOT NULL CHAR(8)
+ ROOMTYPE                                              NOT NULL VARCHAR2(6)
+ ROOMPRICE                                             NOT NULL NUMBER(5,2)
+
+SQL> DESCRIBE Guest;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ GUESTNO                                               NOT NULL CHAR(5)
+ GUESTNAME                                             NOT NULL VARCHAR2(50)
+ GUESTADDRESS                                          NOT NULL VARCHAR2(50)
+
+SQL> DESCRIBE Booking;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ HOTELNO                                               NOT NULL CHAR(8)
+ GUESTNO                                               NOT NULL CHAR(5)
+ DATEFROM                                              NOT NULL DATE
+ DATETO                                                         DATE
+ ROOMNO                                                NOT NULL CHAR(5)
+
+SQL> --Inserting Hotel Values
+SQL> INSERT INTO Hotel
+  2      VALUES('1234632', 'BCIT TERRIBLE HOTEL', 'Vancouver');
+
+1 row created.
+
+SQL> INSERT INTO Hotel
+  2      VALUES('1234633', 'BCIT MORE TERRIBLE', 'Toronto');
+
+1 row created.
+
+SQL> INSERT INTO Hotel
+  2      VALUES('1234634', 'EVAS AWESOME HOTEL', 'Hong Kong');
+
+1 row created.
+
+SQL> --Inserting Room Values
+SQL> INSERT INTO Room
+  2      VALUES('10', '1234632', 'Family', 990.05);
+
+1 row created.
+
+SQL> INSERT INTO Room
+  2      VALUES('20', '1234633', 'Single', 880.05);
+
+1 row created.
+
+SQL> INSERT INTO Room
+  2      VALUES('30', '1234634', 'Double', 770.05);
+
+1 row created.
+
+SQL> --Inserting Guest Values
+SQL> INSERT INTO Guest
+  2      VALUES('01', 'Eva Au', '3563 Metrotown');
+
+1 row created.
+
+SQL> INSERT INTO Guest
+  2      VALUES('02', 'Vladimir Kisselev', '3969 Heather St, Vancouver');
+
+1 row created.
+
+SQL> INSERT INTO Guest
+  2      VALUES('03', 'John H', 'Some street, Burnaby');
+
+1 row created.
+
+SQL> --Inserting Booking Values
+SQL> INSERT INTO Booking
+  2      VALUES('1234632', '01', DATE'2018-01-01', DATE'2018-01-10', '10');
+
+1 row created.
+
+SQL> INSERT INTO Booking
+  2      VALUES('1234633', '02', DATE'2018-02-02', DATE'2018-02-12', '20');
+
+1 row created.
+
+SQL> INSERT INTO Booking
+  2      VALUES('1234634', '03', DATE'2018-03-03', DATE'2018-03-13', '30');
+
+1 row created.
+
+SQL> COMMIT;
+
+Commit complete.
+
+SQL> -- Q.5 a
+SQL> -- Drop the old Constraint
+SQL> --
+SQL> ALTER TABLE Room
+  2  Drop CONSTRAINT chk_type;
+
+Table altered.
+
+SQL> --
+SQL> -- Q.5a
+SQL> -- Add the new Constraint
+SQL> --
+SQL> ALTER TABLE Room
+  2   ADD CONSTRAINT newchk_type CHECK(RoomType IN('Single','Double','Family','Deluxe'));
+
+Table altered.
+
+SQL> --
+SQL> -- Q.5b
+SQL> -- Add new discount column to Room table
+SQL> --
+SQL> ALTER TABLE Room
+  2   ADD discount DECIMAL(4,2)  DEFAULT 0.00 NOT NULL;
+
+Table altered.
+
+SQL> --
+SQL> -- Add Constraint to the discount column
+SQL> --
+SQL> ALTER TABLE Room
+  2   ADD CONSTRAINT chk_discount CHECK(discount BETWEEN 0.00 AND 30.00);
+
+Table altered.
+
+SQL> --Altering Double in Room to increase the price
+SQL> 
+SQL> INSERT INTO Room
+  2      VALUES('11', '1234632', 'Deluxe', 990.05, 25.00);
+
+1 row created.
+
+SQL> 
+SQL> UPDATE Room
+  2  SET RoomPrice = RoomPrice * 1.15
+  3  WHERE HotelNo = '1234634' AND RoomType = 'Double';
+
+1 row updated.
+
+SQL> --Updating Booking dates for a single guest
+SQL> UPDATE Booking
+  2  SET DateFrom = DATE'2017-11-30'
+  3  ,DateTo = DATE'2018-01-14'
+  4  WHERE GuestNo = '01' AND HotelNo = '1234632' AND RoomNo = '10';
+
+1 row updated.
+
+SQL> --Creating table for Old Bookings
+SQL> CREATE TABLE OldBooking
+  2  (HotelNo    CHAR(8)         NOT NULL
+  3  ,GuestNo    CHAR(5)         NOT NULL
+  4  ,DateFrom   DATE
+  5  ,DateTo     DATE
+  6  ,RoomNo     CHAR(5)         NOT NULL
+  7  ,CONSTRAINT PKOldBooking    PRIMARY KEY(HotelNo, GuestNo, DateFrom)
+  8  );
+
+Table created.
+
+SQL> --Taking values from Booking to move to Old Bookings
+SQL> INSERT INTO OldBooking
+  2  SELECT *
+  3  FROM Booking
+  4  WHERE DateTo < DATE'2018-01-15';
+
+1 row created.
+
+SQL> --Deleting old Bookings from Booking
+SQL> DELETE FROM Booking
+  2  WHERE DateTo < DATE'2018-01-15';
+
+1 row deleted.
+
+SQL> COMMIT;
+
+Commit complete.
+
+SQL> --Formatting Hotel output
+SQL> --Formatting Room Output
+SQL> --Formatting Guest Output
+SQL> SET LINESIZE 100
+SQL> SET PAGESIZE 60
+SQL> COLUMN  HotelNo         FORMAT  A10
+SQL> COLUMN  HotelName       FORMAT  A25
+SQL> COLUMN  City            FORMAT  A15
+SQL> COLUMN  RoomNo          FORMAT  A10
+SQL> COLUMN  HotelNo         FORMAT  A10
+SQL> COLUMN  RoomPrice       FORMAT  9999.99
+SQL> COLUMN  GuestNo         FORMAT  A10
+SQL> COLUMN  GuestName       FORMAT  A20
+SQL> COLUMN  GuestAddress    FORMAT  A30
+SQL> --Displaying all current table data
+SQL> SELECT *
+  2  FROM Hotel;
+
+HOTELNO    HOTELNAME                 CITY                                                           
+---------- ------------------------- ---------------                                                
+1234632    BCIT TERRIBLE HOTEL       Vancouver                                                      
+1234633    BCIT MORE TERRIBLE        Toronto                                                        
+1234634    EVAS AWESOME HOTEL        Hong Kong                                                      
+
+SQL> --
+SQL> SELECT *
+  2  FROM Room;
+
+ROOMNO     HOTELNO    ROOMTY ROOMPRICE   DISCOUNT                                                   
+---------- ---------- ------ --------- ----------                                                   
+10         1234632    Family    990.05          0                                                   
+20         1234633    Single    880.05          0                                                   
+30         1234634    Double    885.56          0                                                   
+11         1234632    Deluxe    990.05         25                                                   
+
+SQL> --
+SQL> SELECT *
+  2  FROM Guest;
+
+GUESTNO    GUESTNAME            GUESTADDRESS                                                        
+---------- -------------------- ------------------------------                                      
+01         Eva Au               3563 Metrotown                                                      
+02         Vladimir Kisselev    3969 Heather St, Vancouver                                          
+03         John H               Some street, Burnaby                                                
+
+SQL> --
+SQL> SELECT *
+  2  FROM Booking;
+
+HOTELNO    GUESTNO    DATEFROM   DATETO     ROOMNO                                                  
+---------- ---------- ---------- ---------- ----------                                              
+1234633    02         2018-02-02 2018-02-12 20                                                      
+1234634    03         2018-03-03 2018-03-13 30                                                      
+
+SQL> --
+SQL> SELECT *
+  2  FROM OldBooking;
+
+HOTELNO    GUESTNO    DATEFROM   DATETO     ROOMNO                                                  
+---------- ---------- ---------- ---------- ----------                                              
+1234632    01         2017-11-30 2018-01-14 10                                                      
+
+SQL> --
+SQL> SELECT *
+  2  FROM Booking;
+
+HOTELNO    GUESTNO    DATEFROM   DATETO     ROOMNO                                                  
+---------- ---------- ---------- ---------- ----------                                              
+1234633    02         2018-02-02 2018-02-12 20                                                      
+1234634    03         2018-03-03 2018-03-13 30                                                      
+
+SQL> 
+SQL> DESCRIBE Hotel;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ HOTELNO                                               NOT NULL CHAR(8)
+ HOTELNAME                                             NOT NULL VARCHAR2(50)
+ CITY                                                  NOT NULL VARCHAR2(50)
+
+SQL> DESCRIBE Room;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ ROOMNO                                                NOT NULL CHAR(5)
+ HOTELNO                                               NOT NULL CHAR(8)
+ ROOMTYPE                                              NOT NULL VARCHAR2(6)
+ ROOMPRICE                                             NOT NULL NUMBER(5,2)
+ DISCOUNT                                              NOT NULL NUMBER(4,2)
+
+SQL> DESCRIBE Guest;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ GUESTNO                                               NOT NULL CHAR(5)
+ GUESTNAME                                             NOT NULL VARCHAR2(50)
+ GUESTADDRESS                                          NOT NULL VARCHAR2(50)
+
+SQL> DESCRIBE Booking;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ HOTELNO                                               NOT NULL CHAR(8)
+ GUESTNO                                               NOT NULL CHAR(5)
+ DATEFROM                                              NOT NULL DATE
+ DATETO                                                         DATE
+ ROOMNO                                                NOT NULL CHAR(5)
+
+SQL> DESCRIBE OldBooking;
+ Name                                                  Null?    Type
+ ----------------------------------------------------- -------- ------------------------------------
+ HOTELNO                                               NOT NULL CHAR(8)
+ GUESTNO                                               NOT NULL CHAR(5)
+ DATEFROM                                              NOT NULL DATE
+ DATETO                                                         DATE
+ ROOMNO                                                NOT NULL CHAR(5)
+
+SQL> -- Disabling SPOOL to prevent data loss
+SQL> SPOOL OFF
